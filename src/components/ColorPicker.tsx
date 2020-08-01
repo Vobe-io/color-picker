@@ -1,97 +1,100 @@
 import * as React from 'react';
 import { Component } from 'react';
 
-import * as colorUtil from 'scripts/colorutil';
+import iro from '@jaames/iro';
+import { MdContentCopy } from "react-icons/md";
 
 import Style from 'style/color-picker.module.sass';
-import { store } from 'App';
 
-interface Propterties {
-  size?: number;
+enum Modes {
+  RGB,
+  HEX,
+  HSV,
 }
 
-class ColorPicker extends React.Component<Propterties> {
-  private foregroundCanvas: React.RefObject<HTMLCanvasElement>;
-  private backgroundCanvas: React.RefObject<HTMLCanvasElement>;
-  private isMouseDown: boolean = false;
+interface Properties {
+  size?: number
+}
 
-  constructor(props: Propterties) {
+interface States {
+  currentInfo: string,
+  mode: Modes
+}
+
+class ColorPicker extends Component<Properties, States> {
+
+  private initInfo: string;
+  private colorPicker: iro.ColorPicker | any;
+
+  constructor(props: Properties) {
     super(props);
-    this.foregroundCanvas = React.createRef();
-    this.backgroundCanvas = React.createRef();
+    this.initInfo = "#ffffff";
+    this.state = {
+      currentInfo: this.initInfo,
+      mode: Modes.HEX
+    };
   }
 
   componentDidMount() {
-    const bg = this.backgroundCanvas.current as HTMLCanvasElement;
-    const fg = this.foregroundCanvas.current as HTMLCanvasElement;
-    const size = this.props.size ?? 350;
-    const ctxBg = bg.getContext('2d');
-    const ctxFg = fg.getContext('2d');
-
-    if (ctxBg == null || ctxFg == null) return;
-    bg.width = size + 5;
-    bg.height = size + 5;
-    fg.width = size + 5;
-    fg.height = size + 5;
-
-    colorUtil.drawColorWheel(ctxBg, size);
-
-    fg.onmousedown = () => (this.isMouseDown = true);
-    fg.onmouseup = () => (this.isMouseDown = false);
-    fg.onmouseleave = () => (this.isMouseDown = false);
-    fg.addEventListener('mousemove', (evt: MouseEvent) => {
-      if (!this.isMouseDown) return;
-
-      const isInsideRadius = (mouseX: number, mouseY: number, radius: number): boolean =>
-        Math.sqrt(Math.pow(mouseX - size / 2, 2) + Math.pow(mouseY - size / 2, 2)) < radius - 1 / Number.MAX_VALUE;
-
-      const { x, y } = getMousePos(fg, evt);
-      if (!isInsideRadius(x, y, size / 2)) return;
-      const imageData = ctxBg.getImageData(x, y, 1, 1).data;
-      const hex = '#' + ('000000' + colorUtil.rgbToHex(imageData[0], imageData[1], imageData[2])).slice(-6);
-
-      const clear = () => ctxFg.clearRect(0, 0, fg.width, fg.height);
-      const draw = () => {
-        store.color = hex;
-
-        ctxFg.strokeStyle = '#ffffff';
-        ctxFg.fillStyle = hex;
-        ctxFg.lineWidth = 5;
-        ctxFg.beginPath();
-        ctxFg.arc(x, y, size / 50, 0, 2 * Math.PI);
-        ctxFg.stroke();
-        ctxFg.fill();
-        ctxFg.closePath();
-
-        ctxFg.lineWidth = 2.5;
-        ctxFg.beginPath();
-        ctxFg.moveTo(size / 2, size / 2);
-        ctxFg.lineTo(x - size / 50, y - size / 50);
-        ctxFg.stroke();
-        ctxFg.closePath();
-      };
-
-      clear();
-      draw();
+    this.colorPicker = new (iro.ColorPicker as any)('#parent', {
+      width: this.props.size,
+      color: this.initInfo
     });
+    this.colorPicker.on('color:change', (color: any) => {
+      this.updateInfo(this.state.mode);
+    })
+  }
 
-    const getMousePos = (canvas: HTMLCanvasElement, evt: MouseEvent) => {
-      var rect = canvas.getBoundingClientRect();
-      return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top,
-      };
+  updateInfo = (mode: Modes) => {
+    switch(mode) {
+      case Modes.RGB: {
+        this.setState({mode: Modes.RGB, currentInfo: this.colorPicker.color.rgbString});
+        break;
+      }
+      case Modes.HEX: {
+        this.setState({mode: Modes.HEX, currentInfo: this.colorPicker.color.hexString});
+        break;
+      }
+      case Modes.HSV: {
+        this.setState({mode: Modes.HSV, currentInfo: JSON.stringify(this.colorPicker.color.hsv)});
+        break;
+      }
+      default: {
+        this.setState({currentInfo: "Unknown Mode"});
+      }
     };
+  }
+
+  copyTextToClipboard = (text: string) => {
+    if(!navigator.clipboard) {
+      alert("Sorry but your Browser doesn't support copying to clipboard");
+      return;
+    }
+    navigator.clipboard.writeText(text);
   }
 
   render() {
     return (
       <div className={Style.ColorPicker}>
-        <canvas ref={this.foregroundCanvas} className={Style.canvas} style={{ zIndex: 1, width: this.props.size ?? 350 }}></canvas>
-        <canvas ref={this.backgroundCanvas} className={Style.canvas} style={{ zIndex: 0, width: this.props.size ?? 350 }}></canvas>
+        <div className={Style.Row2}>  
+          <div className={Style.fillLeft}></div>
+          <div className={Style.parent} id="parent"></div>
+          <div className={Style.fillRight}>
+            <div className={Style.colorInfo}>
+              <div className={Style.colorInfoValue}>
+                {this.state.currentInfo}
+                <MdContentCopy onClick={() => this.copyTextToClipboard(this.state.currentInfo)} className={Style.copyIcon} />
+                </div>
+              <div className={Style.colorInfoChange}>
+                <div onClick={() => this.updateInfo(Modes.RGB)} className={this.state.mode === Modes.RGB ? Style.changeButtonActive : undefined}>RGB</div>
+                <div onClick={() => this.updateInfo(Modes.HEX)} className={this.state.mode === Modes.HEX ? Style.changeButtonActive : undefined}>HEX</div>
+                <div onClick={() => this.updateInfo(Modes.HSV)} className={this.state.mode === Modes.HSV ? Style.changeButtonActive : undefined}>HSV</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 }
-
 export default ColorPicker;

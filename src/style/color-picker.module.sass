@@ -1,17 +1,47 @@
 .ColorPicker
   position: relative
-  // top: 25%
-  // left: calc(25% + (350px /2 ) )
 
-.canvas
-  transform: translateX(-50%) translateY(-50%)
-  position: absolute
-  top: 0
-  bottom: 0
-  left: 0
-  right: 0
+.Row2
+  display: flex
+  align-items: center
+  flex-wrap: wrap
 
-  margin-right: auto
+.fillLeft
+  flex: 1
 
-  margin-left: auto
+.fillRight
+  flex: 1
+
+.colorInfo
+  display: flex
+  flex-direction: column
+  margin-left: 50px
+  text-transform: uppercase
+
+.colorInfoValue
+  display: flex
+  flex-wrap: wrap
+  align-items: center
+  color: #707070
+  font-size: 40pt
+
+.colorInfoChange
+  display: flex
+  margin: 0 0 0 0
+  align-self: flex-start
+  user-select: none
+  border-style: solid
+  border-width: 2px
+  border-color: #707070
+  border-radius: 4px 4px 4px 4px
+  *
+    cursor: pointer
+    margin: 0 10px 0 10px
+
+.copyIcon
+  margin-left: 10px
+  cursor: pointer
+
+.changeButtonActive
+  font-weight: bold
 

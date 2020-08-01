@@ -14,7 +14,7 @@ class App extends Component {
     return (
       <div id="App">
         <div className="test">
-          <ColorPicker size={500} />
+          <ColorPicker size={450} />
         </div>
       </div>
     );
