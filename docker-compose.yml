@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  vobe-color:
+    container_name: vobe-color
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+    - '${PORT}:80'
+    networks:
+      - vobe
+
+networks:
+  vobe:
+    external: true
