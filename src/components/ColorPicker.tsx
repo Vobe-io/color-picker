@@ -38,7 +38,8 @@ class ColorPicker extends Component<Properties, States> {
   componentDidMount() {
     this.colorPicker = new (iro.ColorPicker as any)('#parent', {
       width: this.props.size,
-      color: this.initInfo
+      color: this.initInfo,
+      borderWidth: 2
     });
     this.colorPicker.on('color:change', (color: any) => {
       this.updateInfo(this.state.mode);
